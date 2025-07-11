@@ -1,5 +1,5 @@
 import Image from "next/image";
-
+import Link from "next/link";
 
 const Hero = () => {
     return (
@@ -17,9 +17,9 @@ const Hero = () => {
                         Experience cutting-edge solutions designed to elevate productivity and deliver results like never before.
                     </p>
                     <div className="flex">
-                        <button className="text-white mt-4 px-6 py-2 bg-black outline-4 outline-gray-800 outline-offset-8 rounded-full hover:text-[#9D9D9D] cursor-pointer">
+                        <Link href='/input' className="text-white mt-4 px-6 py-2 bg-black outline-4 outline-gray-800 outline-offset-8 rounded-full hover:text-[#9D9D9D] cursor-pointer">
                             Get Started
-                        </button>
+                        </Link>
                     </div>
                 </div>
                 <div className="relative">
