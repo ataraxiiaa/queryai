@@ -6,16 +6,25 @@ import Hero from "./components/Hero";
 export default function Home() {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const askGroq = async () => {
-    const res = await fetch("/api/ask", {
-      method: "POST",
-      body: JSON.stringify({ prompt: input }),
-      headers: { "Content-Type": "application/json" },
-    });
+    setLoading(true);
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        body: JSON.stringify({ prompt: input }),
+        headers: { "Content-Type": "application/json" },
+      });
 
-    const data = await res.json();
-    setResponse(data.response || data.error);
+      const data = await res.json();
+      setResponse(data.response || data.error);
+    } catch (error) {
+      setResponse("Error: Could not get response from AI");
+      console.error("Error asking Groq:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,10 +46,17 @@ export default function Home() {
               />
               <button
                 onClick={askGroq}
-                disabled={!input.trim()}
-                className="absolute bottom-4 right-4 text-white px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full shadow-lg hover:shadow-gray-700/60 transition-all duration-300 border border-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!input.trim() || loading}
+                className="absolute bottom-4 right-4 text-white px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full shadow-lg hover:shadow-gray-700/60 transition-all duration-300 border border-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Ask AI
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Thinking...</span>
+                  </>
+                ) : (
+                  "Ask AI"
+                )}
               </button>
             </div>
           </div>

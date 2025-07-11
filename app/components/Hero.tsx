@@ -28,7 +28,7 @@ const Hero = () => {
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-110 h-100 bg-gradient-radial from-white/80 via-gray-50/20 to-transparent rounded-full blur-xl -z-10"></div>
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-75 h-100 bg-white/40 rounded-full blur-lg -z-10"></div>
                     <Image
-                        src="/Hero.png"
+                        src="/hero.png"
                         alt="Hero Image"
                         width={568}
                         height={700}

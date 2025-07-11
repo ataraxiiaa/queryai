@@ -1,49 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import UserModel from "@/model/user";
-import { userSchema } from "@/schemas/userSchema";
-
+import { UserModel } from "@/models/user";
+import { testConnection } from "@/lib/mysql";
 
 export async function GET() {
   try {
-    await dbConnect()
-    const users = await UserModel.find({})
-    return NextResponse.json({ users });
-  }
-  catch (error) {
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      return NextResponse.json(
+        { error: "Database connection failed" },
+        { status: 503 }
+      );
+    }
+    await UserModel.createTable();
+    
+    const users = await UserModel.findAll();
+    
+    return NextResponse.json({ 
+      users,
+      message: `Found ${users.length} users`
+    });
+  } catch (error) {
     console.error("Error fetching users:", error);
-
-    return NextResponse.json("Error fetching users")
+    return NextResponse.json(
+      { error: "Failed to fetch users"},
+      { status: 500 }
+    );
   }
 }
 
-
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
-
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      return NextResponse.json(
+        { error: "Database connection failed" },
+        { status: 503 }
+      );
+    }
+    await UserModel.createTable();
+    
     const body = await request.json();
     console.log("Received body:", body);
 
-    const validationData = {
-      name: body.name,
-      email: body.email,
-      password: body.password,
-      city: body.city,
-    };
+    const { name, email, password, bio, location, city,state,country, birthdate, role } = body;
 
-    console.log("Validation data:", validationData);
+    if (!name || !email || !password) {
+      return NextResponse.json(
+        { error: "All fields (name, email, password) are required" },
+        { status: 400 }
+      );
+    }
 
-    const createUserSchema = userSchema.omit({
-      id: true,
-      createdAt: true,
-      updatedAt: true
-    });
-
-    const validatedData = createUserSchema.parse(validationData);
-    console.log("Validated data:", validatedData);
-
-    const existingUser = await UserModel.findOne({ email: validatedData.email });
+    const existingUser = await UserModel.findByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { error: "User with this email already exists" },
@@ -51,32 +59,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newUser = new UserModel(validatedData);
-    await newUser.save();
+    const newUser = await UserModel.create({ name, email, password , bio, location, city, state, country, birthdate, role });
+    console.log("Created user:", newUser);
 
     return NextResponse.json(
-      { message: "User created successfully", user: newUser },
+      { 
+        message: "User created successfully", 
+        user: {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          created_at: newUser.created_at
+        }
+      },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating user:", error);
 
-    if (error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    if (error.code === 11000) {
-      return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
-      { error: "Failed to create user" },
+      { error: "Failed to create user"},
       { status: 500 }
     );
   }
