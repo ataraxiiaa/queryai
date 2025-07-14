@@ -3,17 +3,34 @@ import { useEffect, useState, useRef } from "react";
 import { FiSend } from "react-icons/fi";
 import Sidebar from "../components/Sidebar";
 
-type Message = { role: "user" | "assistant"; content: string };
 const TakeInput = () => {
 
-    const textAreaRef = useRef<HTMLTextAreaElement>(null)
-
+    const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [showEmptyChat, setShowEmptyChat] = useState(true);
+    type Message = { role: "user" | "assistant"; content: string };
     const [conversation, setConversation] = useState<Message[]>([]);
     const [errorMessage, setErrorMessage] = useState("");
     const bottomOfChatRef = useRef<HTMLDivElement>(null);
+    
+    const [currentChatId, setCurrentChatId] = useState<number | null>(null);
+    const [chatSessions, setChatSessions] = useState<{chat_id: number}[]>([]);
+    const [sessionLoading, setSessionLoading] = useState(false);
+
+
+    useEffect(() => {
+        const innit = async () => {
+            await loadChatSessions();
+        }
+        if (currentChatId) {
+            loadChatMessages(currentChatId).then(messages => {
+                setConversation(messages);
+                setShowEmptyChat(messages.length === 0);
+            });
+        }
+        innit()
+    }, [currentChatId]);
 
     useEffect(() => {
         if (textAreaRef.current) {
@@ -24,27 +41,41 @@ const TakeInput = () => {
             bottomOfChatRef.current.scrollIntoView({ behavior: "smooth" });
         }
 
-    }, [textAreaRef, bottomOfChatRef]);
+    }, [conversation]);
     const askGroq = async () => {
+        if (!currentChatId) {
+            setErrorMessage("No active chat. Please wait...");
+            return;
+        }
+
         setLoading(true);
+        const userMessage = input.trim();
+        
         try {
+            await saveMessage(currentChatId, "user", userMessage);
+            
             const convo: Message[] = [
                 ...conversation,
-                { role: "user", content: input }
+                { role: "user", content: userMessage }
             ];
             setConversation(convo);
             setInput("");
             setShowEmptyChat(false);
+            
             const res = await fetch("/api/ask", {
                 method: "POST",
-                body: JSON.stringify({ prompt: input }),
+                body: JSON.stringify({ prompt: userMessage }),
                 headers: { "Content-Type": "application/json" },
             });
 
             const data = await res.json();
+            const aiResponse = data.response || data.error;
+            
+            await saveMessage(currentChatId, "assistant", aiResponse);
+            
             setConversation(prev => [
                 ...prev,
-                { role: "assistant", content: data.response || data.error }
+                { role: "assistant", content: aiResponse }
             ]);
 
         } catch (error) {
@@ -64,10 +95,128 @@ const TakeInput = () => {
         }
     };
 
+    const createNewChat = async () => {
+        try {
+            setSessionLoading(true);
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
+            });
+            const data = await response.json();
+            
+            if (data.session) {
+                setCurrentChatId(data.session.chat_id);
+                setConversation([]);
+                setShowEmptyChat(true);
+                await loadChatSessions();
+                return data.session.chat_id;
+            }
+        } catch (error) {
+            console.error('Error creating chat:', error);
+        } finally {
+            setSessionLoading(false);
+        }
+        return null;
+    };
+
+    const loadChatSessions = async () => {
+        try {
+            const response = await fetch('/api/chat');
+            const data = await response.json();
+            setChatSessions(data.sessions || []);
+        } catch (error) {
+            console.error('Error loading chat sessions:', error);
+        }
+    };
+
+    const loadChatMessages = async (chatId: number) => {
+        try {
+            const response = await fetch(`/api/chat/${chatId}`);
+            const data = await response.json();
+            return data.messages || [];
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            return [];
+        }
+    };
+
+    const switchToChat = async (chatId: number) => {
+        if (chatId === currentChatId) return;
+        
+        try {
+            setSessionLoading(true);
+            const messages = await loadChatMessages(chatId);
+            setCurrentChatId(chatId);
+            setConversation(messages);
+            setShowEmptyChat(messages.length === 0);
+        } catch (error) {
+            console.error('Error switching chat:', error);
+        } finally {
+            setSessionLoading(false);
+        }
+    };
+
+    const saveMessage = async (chatId: number, role: "user" | "assistant", content: string) => {
+        try {
+            const response = await fetch(`/api/chat/${chatId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role, content }),
+            });
+            const data = await response.json();
+            return data.message;
+        } catch (error) {
+            console.error('Error saving message:', error);
+            throw error;
+        }
+    };
+
+    const deleteChat = async (chatId: number) => {
+        if (!confirm('Are you sure you want to delete this chat?')) {
+            return;
+        }
+
+        try {
+            setSessionLoading(true);
+            
+            const response = await fetch(`/api/chat/${chatId}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete chat');
+            }
+            await loadChatSessions();
+            if (chatId === currentChatId) {
+                const updatedSessions = await fetch('/api/chat').then(res => res.json());
+                if (updatedSessions.sessions && updatedSessions.sessions.length > 0) {
+                    const firstChat = updatedSessions.sessions[0];
+                    await switchToChat(firstChat.chat_id);
+                } else {
+                    await createNewChat();
+                }
+            }
+
+        } catch (error) {
+            console.error('Error deleting chat:', error);
+            setErrorMessage('Failed to delete chat');
+        } finally {
+            setSessionLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-black flex max-w-full flex-1 flex-row">
             <div className="w-64 bg-gray-900 border-r border-white/20 hidden md:block min-h-screen sticky top-0">
-                <Sidebar />
+                <Sidebar 
+                    chatSessions={chatSessions}
+                    currentChatId={currentChatId}
+                    onChatSelect={switchToChat}
+                    onNewChat={createNewChat}
+                    onDeleteChat={deleteChat}
+                    sessionLoading={sessionLoading}
+                />
             </div>
             <div className="flex-1 flex flex-col">
                 <div className="relative w-full transition-width flex flex-col items-stretch flex-1">
@@ -140,8 +289,8 @@ const TakeInput = () => {
                                         onKeyDown={handleKeypress}
                                     ></textarea>
                                     <button
-                                        disabled={loading || input?.length === 0}
-                                        onClick={e => { e.preventDefault(); if (input.trim().length > 0 && !loading) askGroq(); }}
+                                        disabled={loading || input?.length === 0 || !currentChatId || sessionLoading}
+                                        onClick={e => { e.preventDefault(); if (input.trim().length > 0 && !loading && currentChatId) askGroq(); }}
                                         className="absolute p-1 rounded-md bottom-1.5 md:bottom-2.5 bg-transparent disabled:bg-gray-500 right-1 md:right-2 disabled:opacity-40"
                                     >
                                         <FiSend className="h-4 w-4 mr-1 text-white " />
@@ -162,3 +311,4 @@ const TakeInput = () => {
 }
 
 export default TakeInput;
+
