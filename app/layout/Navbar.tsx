@@ -13,7 +13,6 @@ const Navbar = () => {
                         <Link href="/add" className="text-gray-300 hover:text-[#9D9D9D]">Add</Link>
                     </div>
                 </div>
-                <Link href='/' className="rounded-full border border-gray-800 text-white t-2 px-10 py-3 hover:text-[#9D9D9D]">Login</Link>
             </div>
         </nav>
     );

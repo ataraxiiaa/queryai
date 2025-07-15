@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useRef } from "react";
-import { FiSend } from "react-icons/fi";
+import { IoArrowUpOutline } from "react-icons/io5";
 import Sidebar from "../components/Sidebar";
 
 const TakeInput = () => {
@@ -207,8 +207,8 @@ const TakeInput = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black flex max-w-full flex-1 flex-row">
-            <div className="w-64 bg-gray-900 border-r border-white/20 hidden md:block min-h-screen sticky top-0">
+        <div className="h-screen bg-gray-800 flex max-w-full flex-1 flex-row overflow-hidden">
+            <div className="w-64 bg-gray-900 border-r border-white/20 hidden md:block h-screen sticky top-0">
                 <Sidebar 
                     chatSessions={chatSessions}
                     currentChatId={currentChatId}
@@ -218,50 +218,49 @@ const TakeInput = () => {
                     sessionLoading={sessionLoading}
                 />
             </div>
-            <div className="flex-1 flex flex-col">
-                <div className="relative w-full transition-width flex flex-col items-stretch flex-1">
-                    <div className="flex-1">
-                        <div className="react-scroll-to-bottom--css-ikyem-79elbk dark:bg-black">
-                            <div className="react-scroll-to-bottom--css-ikyem-1n7m0yu">
-                                {!showEmptyChat && conversation.length > 0 ? (
-                                    <div className="max-w-7xl flex flex-col items-center text-sm bg-black mt-10 px-4">
-                                        {conversation.map((msg, idx) => (
+            <div className="flex-1 flex flex-col relative h-screen">
+                <div className={`flex-1 ${!showEmptyChat && conversation.length > 0 ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+                    <div className="react-scroll-to-bottom--css-ikyem-79elbk dark:bg-gray-800 h-full">
+                        <div className="react-scroll-to-bottom--css-ikyem-1n7m0yu h-full">
+                            {!showEmptyChat && conversation.length > 0 ? (
+                                <div className="max-w-7xl flex flex-col items-center text-sm bg-gray-800 mt-10 px-4">
+                                    {conversation.map((msg, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`flex w-full mb-2 ${msg.role === "user" ? "justify-end" : "justify-start pl-20"}`}
+                                            style={{ justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}
+                                        >
                                             <div
-                                                key={idx}
-                                                className={`flex w-full mb-2 ${msg.role === "user" ? "justify-end" : "justify-start pl-20"}`}
-                                                style={{ justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}
+                                                className={`max-w-[60%] p-3 rounded-xl text-sm whitespace-pre-wrap break-words shadow-lg
+                                                    ${msg.role === "user"
+                                                        ? "bg-gray-700 text-white rounded-br-none"
+                                                        : "bg-gray-200 dark:bg-transparent text-gray-900 dark:text-gray-100 rounded-bl-none"}
+                                                `}
+                                                style={{
+                                                    marginRight: msg.role === "user" ? "2.5rem" : "auto",
+                                                    marginLeft: msg.role === "assistant" ? "2.5rem" : "auto"
+                                                }}
                                             >
-                                                <div
-                                                    className={`max-w-[60%] p-3 rounded-xl text-sm whitespace-pre-wrap break-words shadow-lg
-                                                        ${msg.role === "user"
-                                                            ? "bg-blue-500 text-white rounded-br-none"
-                                                            : "bg-gray-200 dark:bg-[#444654] text-gray-900 dark:text-gray-100 rounded-bl-none font-mono border border-gray-300 dark:border-gray-600"}
-                                                    `}
-                                                    style={{
-                                                        marginRight: msg.role === "user" ? "2.5rem" : "auto",
-                                                        marginLeft: msg.role === "assistant" ? "2.5rem" : "auto"
-                                                    }}
-                                                >
-                                                    {msg.content}
-                                                </div>
+                                                {msg.content}
                                             </div>
-                                        ))}
-                                        <div className="w-full h-32 md:h-48 flex-shrink-0"></div>
-                                        <div ref={bottomOfChatRef}></div>
-                                    </div>
-                                ) : null}
-                                {showEmptyChat ? (
-                                    <div className="py-10 relative w-full flex flex-col h-full">
-                                        <h1 className="text-2xl sm:text-4xl font-semibold text-center text-gray-200 dark:text-gray-600 flex gap-2 items-center justify-center h-screen">
-                                            QAI
-                                        </h1>
-                                    </div>
-                                ) : null}
-                                <div className="flex flex-col items-center text-sm dark:bg-gray-800"></div>
-                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="w-full h-32 md:h-48 flex-shrink-0"></div>
+                                    <div ref={bottomOfChatRef}></div>
+                                </div>
+                            ) : null}
+                            {showEmptyChat ? (
+                                <div className="py-10 relative w-full flex flex-col h-full">
+                                    <h1 className="text-2xl sm:text-4xl font-semibold text-center text-gray-200 dark:text-gray-600 flex gap-2 items-center justify-center h-full">
+                                        What Can I help you with?
+                                    </h1>
+                                </div>
+                            ) : null}
+                            <div className="flex flex-col items-center text-sm dark:bg-gray-800"></div>
                         </div>
                     </div>
-                    <div className="absolute bottom-0 left-0 w-full border-t md:border-t-0 dark:border-white/20 md:border-transparent md:dark:border-transparent md:bg-vert-light-gradient bg-white dark:bg-gray-800 md:!bg-transparent dark:md:bg-vert-dark-gradient pt-2">
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 border-t md:border-t-0 dark:border-white/20 md:border-transparent md:dark:border-transparent md:bg-vert-light-gradient bg-white dark:bg-gray-800 md:!bg-transparent dark:md:bg-vert-dark-gradient pt-2 z-10">
                         <form className="stretch mx-2 flex flex-row gap-3 last:mb-2 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl">
                             <div className="relative flex flex-col h-full flex-1 items-stretch md:flex-col">
                                 {errorMessage ? (
@@ -271,7 +270,7 @@ const TakeInput = () => {
                                         </div>
                                     </div>
                                 ) : null}
-                                <div className="flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:shadow-[0_0_15px_rgba(0,0,0,0.10)]">
+                                <div className="flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-md">
                                     <textarea
                                         ref={textAreaRef}
                                         value={input}
@@ -281,19 +280,22 @@ const TakeInput = () => {
                                             height: "24px",
                                             maxHeight: "200px",
                                             overflowY: "hidden",
+                                            outline: "none", 
                                         }}
                                         rows={1}
                                         placeholder="Send a message..."
-                                        className="m-0 w-full resize-none border-0 bg-transparent p-0 pr-7 focus:ring-0 focus-visible:ring-0 dark:bg-transparent pl-2 md:pl-0"
+                                        className="m-0 w-full resize-none border-0 bg-transparent p-0 pr-7 focus:ring-0 focus-visible:ring-0 focus:outline-none focus-visible:outline-none dark:bg-transparent pl-2 md:pl-0"
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={handleKeypress}
                                     ></textarea>
                                     <button
                                         disabled={loading || input?.length === 0 || !currentChatId || sessionLoading}
                                         onClick={e => { e.preventDefault(); if (input.trim().length > 0 && !loading && currentChatId) askGroq(); }}
-                                        className="absolute p-1 rounded-md bottom-1.5 md:bottom-2.5 bg-transparent disabled:bg-gray-500 right-1 md:right-2 disabled:opacity-40"
+                                        className={`absolute p-1 rounded-full bottom-1.5 md:bottom-2.5 right-1 md:right-2 disabled:opacity-40 cursor-pointer
+                                            ${input.trim().length > 0? 'bg-gray-800' : 'bg-gray-500'}
+                                        `}
                                     >
-                                        <FiSend className="h-4 w-4 mr-1 text-white " />
+                                        <IoArrowUpOutline className={`h-6 w-6 text-white`} />
                                     </button>
                                 </div>
                             </div>
@@ -304,7 +306,6 @@ const TakeInput = () => {
                             </span>
                         </div>
                     </div>
-                </div>
             </div>
         </div>
     );

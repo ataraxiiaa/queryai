@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "./layout/Navbar";
-
 
 export const metadata: Metadata = {
   title: "QAI",
@@ -18,7 +16,6 @@ export default function RootLayout({
       <body
         className={`bg-[#01030F] antialiased`}
       >
-        <Navbar />
         {children}
       </body>
     </html>

@@ -1,6 +1,7 @@
 import React from "react";
 import {
   AiOutlinePlus,
+  AiOutlineArrowLeft
 } from "react-icons/ai";
 import { FiMessageSquare } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -25,6 +26,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div className="scrollbar-trigger flex h-full w-full flex-1 items-start border-white/20">
       <nav className="flex h-full flex-1 flex-col space-y-1 p-2">
+        <button 
+          onClick={() => window.location.href = "/"}
+          className="flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm mb-1 flex-shrink-0 border border-white/20 disabled:opacity-50"
+        >
+          <AiOutlineArrowLeft className="h-4 w-4" />
+          Go Back
+        </button>
+
         <button 
           onClick={onNewChat}
           disabled={sessionLoading}
@@ -51,14 +60,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                   className="flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative text-left"
                 >
                   Chat {session.chat_id}
-                  <div className="absolute inset-y-0 right-0 w-8 z-10 bg-gradient-to-l from-gray-900 group-hover:from-[#2A2B32]"></div>
                 </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteChat(session.chat_id);
                   }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded hover:bg-red-500/20 text-red-400 hover:text-red-300"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded hover:bg-red-500/20 text-red-400 hover:text-red-300 cursor-pointer"
                   title="Delete chat"
                 >
                   <RiDeleteBin6Line className="h-4 w-4" />

@@ -70,7 +70,7 @@ Example Prompts:
 
      const sqlPrompt = `
 You are a SQL query generator. Given a natural language query about users, generate a valid PostgreSQL SQL query.
-
+Query intent: ${input}
 Database schema:
 1. users: user_id (INT PK), username (VARCHAR), email (VARCHAR), password_hash (VARCHAR), created_at, updated_at
 2. UserProfiles: profile_id (INT PK), user_id (FK), full_name (VARCHAR), bio (TEXT), profile_picture_url (TEXT), location (VARCHAR), birthdate (DATE), city_id (FK)
@@ -89,7 +89,7 @@ Rules:
 8. Use only the exact table and column names provided — do not change or rename them
 9. Only use standard ASCII characters in queries — no special characters, quotes, or markdown
 10. The SQL query must be valid PostgreSQL and executable as-is, with no formatting, backticks, or markdown
-
+11. If the query does not return any results, return a message indicating that no results were found while reflecting the original parameters or filters used in the query.
 User query: "${input}"
 
 SQL query:`;
@@ -117,7 +117,7 @@ SQL query:`;
 
         return `Found ${results.length} result(s):\n\n${formattedResults}`;
       } else {
-        return "No results found for the given query.";
+        return `No results found for the given query: "${input}". Please check the parameters used.`;
       }
 
     } catch (error) {

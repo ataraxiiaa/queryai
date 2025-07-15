@@ -43,7 +43,15 @@ export const runGroqChain = async (userInput: string) => {
       return response.output; 
     }
 
-    const summaryPrompt = `You are an assistant that received the following JSON data from a PostgreSQL query:\n\n${toolOutput}\n\nExtract and clearly display the user list in a readable format. Do not ask follow-up questions or defer to the user. Just output the list and DO NOT make the text bold`;
+  const summaryPrompt = `
+  You are a helpful assistant. You have received the following JSON data as the result of a PostgreSQL query:
+
+  ${toolOutput}
+
+  Your task is to extract and present a clear, readable list of users based on this data. Format the information as a plain list with no bold or decorative styling. If the data is empty or no users are found, clearly state that—while reflecting the original parameters or filters (if any) used in the query.
+
+  Do not ask follow-up questions or defer to the user. Simply output the result in the most human-readable and concise way possible while having the paramenters or filters in your answer.
+  `;
     
     const summary = await model.invoke(summaryPrompt);
 
